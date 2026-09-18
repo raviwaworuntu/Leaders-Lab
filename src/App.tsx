@@ -61,6 +61,7 @@ export default function App() {
   const [detailSubmission, setDetailSubmission] = useState<Submission | null>(null);
   const [editingSession, setEditingSession] = useState<SeminarSession | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
+  const [isParticipantScan, setIsParticipantScan] = useState<boolean>(false);
 
   // Check URL query parameters for direct scan flow: e.g. /?mode=form&session=3
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function App() {
 
     if (modeParam === 'form' || sessionParam) {
       setAppMode('form');
+      setIsParticipantScan(true);
     }
     if (sessionParam) {
       const parsedSId = parseInt(sessionParam, 10);
@@ -275,114 +277,142 @@ export default function App() {
       {/* App Top Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Brand Identity */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-800 text-white flex items-center justify-center shadow-md shadow-amber-600/20 font-serif font-bold text-lg">
-                ✝
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-none">
-                    Portal Evaluasi Seminar Rohani
-                  </h1>
-                  <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                    {sessions.length} Sesi Belajar
-                  </span>
+          {isParticipantScan ? (
+            /* Dedicated Participant Clean Header (No admin controls, no other sessions) */
+            <div className="w-full flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-800 text-white flex items-center justify-center shadow-md shadow-amber-600/20 font-serif font-bold text-lg">
+                  ✝
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Pemantauan Hasil Belajar & Pertumbuhan Rohani Mahasiswa
-                </p>
+                <div>
+                  <h1 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-none">
+                    Seminar Rohani Mahasiswa Kristen
+                  </h1>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Evaluasi & Refleksi Pembelajaran Rohani
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                  Sesi {activeSessionId} Aktif
+                </span>
               </div>
             </div>
+          ) : (
+            /* Admin & Coordinator Header */
+            <>
+              {/* Brand Identity */}
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-800 text-white flex items-center justify-center shadow-md shadow-amber-600/20 font-serif font-bold text-lg">
+                    ✝
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-none">
+                        Portal Evaluasi Seminar Rohani
+                      </h1>
+                      <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                        {sessions.length} Sesi Belajar
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Pemantauan Hasil Belajar & Pertumbuhan Rohani Mahasiswa
+                    </p>
+                  </div>
+                </div>
 
-            {/* Mobile View Toggle */}
-            <div className="sm:hidden">
-              <button
-                onClick={() => setAppMode(appMode === 'admin' ? 'form' : 'admin')}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200 flex items-center gap-1"
-              >
-                {appMode === 'admin' ? <Smartphone className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
-                <span>{appMode === 'admin' ? 'Form' : 'Admin'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Navigation & Controls */}
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-            {/* Mode Switcher Buttons */}
-            <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 text-xs font-semibold">
-              <button
-                onClick={() => setAppMode('admin')}
-                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
-                  appMode === 'admin'
-                    ? 'bg-white text-slate-900 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Shield className="w-3.5 h-3.5 text-amber-600" />
-                <span>Panel Koordinator</span>
-              </button>
-
-              <button
-                onClick={() => setAppMode('form')}
-                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
-                  appMode === 'form'
-                    ? 'bg-amber-600 text-white shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Mode Peserta (Form HP)</span>
-              </button>
-            </div>
-
-            {/* Master Excel Export, Input Sesi & Reset Controls */}
-            {appMode === 'admin' && (
-              <div className="hidden sm:flex items-center gap-2">
-                <button
-                  onClick={() => setIsCreatingSession(true)}
-                  title="Tambah / input sesi seminar rohani baru ke dalam sistem"
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>+ Input Sesi Baru</span>
-                </button>
-
-                <button
-                  onClick={handleExportMasterExcel}
-                  disabled={isExporting}
-                  title="Unduh seluruh rekapitulasi data jawaban seminar ke format Excel (.xlsx)"
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-60"
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                  <span>{isExporting ? 'Mengunduh...' : 'Ekspor Master Excel (.xlsx)'}</span>
-                </button>
-
-                {(stats?.totalSubmissions || 0) > 0 && (
+                {/* Mobile View Toggle */}
+                <div className="sm:hidden">
                   <button
-                    onClick={() => {
-                      if (window.confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA evaluasi di ${sessions.length} sesi seminar? Seluruh jawaban peserta akan dikosongkan. Tindakan ini tidak dapat dibatalkan.`)) {
-                        handleClearAllSubmissions();
-                      }
-                    }}
-                    title="Kosongkan seluruh data jawaban di semua sesi seminar"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-300 text-xs font-semibold transition cursor-pointer"
+                    onClick={() => setAppMode(appMode === 'admin' ? 'form' : 'admin')}
+                    className="px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200 flex items-center gap-1"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Kosongkan Data</span>
+                    {appMode === 'admin' ? <Smartphone className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
+                    <span>{appMode === 'admin' ? 'Form' : 'Admin'}</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Navigation & Controls */}
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                {/* Mode Switcher Buttons */}
+                <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 text-xs font-semibold">
+                  <button
+                    onClick={() => setAppMode('admin')}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+                      appMode === 'admin'
+                        ? 'bg-white text-slate-900 shadow-xs font-bold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Shield className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Panel Koordinator</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAppMode('form')}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+                      appMode === 'form'
+                        ? 'bg-amber-600 text-white shadow-xs font-bold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>Mode Peserta (Form HP)</span>
+                  </button>
+                </div>
+
+                {/* Master Excel Export, Input Sesi & Reset Controls */}
+                {appMode === 'admin' && (
+                  <div className="hidden sm:flex items-center gap-2">
+                    <button
+                      onClick={() => setIsCreatingSession(true)}
+                      title="Tambah / input sesi seminar rohani baru ke dalam sistem"
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>+ Input Sesi Baru</span>
+                    </button>
+
+                    <button
+                      onClick={handleExportMasterExcel}
+                      disabled={isExporting}
+                      title="Unduh seluruh rekapitulasi data jawaban seminar ke format Excel (.xlsx)"
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-60"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span>{isExporting ? 'Mengunduh...' : 'Ekspor Master Excel (.xlsx)'}</span>
+                    </button>
+
+                    {(stats?.totalSubmissions || 0) > 0 && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA evaluasi di ${sessions.length} sesi seminar? Seluruh jawaban peserta akan dikosongkan. Tindakan ini tidak dapat dibatalkan.`)) {
+                            handleClearAllSubmissions();
+                          }
+                        }}
+                        title="Kosongkan seluruh data jawaban di semua sesi seminar"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-300 text-xs font-semibold transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Kosongkan Data</span>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
         {appMode === 'form' ? (
-          /* Participant Form View */
+          /* Participant Form View: Locked strictly to the active session */
           <ParticipantForm
             sessions={sessions}
             initialSessionId={activeSessionId}
@@ -390,8 +420,12 @@ export default function App() {
               fetchStats();
               fetchSubmissionsForSession(sId);
             }}
-            onBackToDashboard={() => setAppMode('admin')}
-            isAdminViewing={true}
+            onBackToDashboard={() => {
+              setAppMode('admin');
+              setIsParticipantScan(false);
+            }}
+            isAdminViewing={!isParticipantScan}
+            lockToActiveSession={true}
           />
         ) : (
           /* Admin / Coordinator View */
@@ -510,9 +544,23 @@ export default function App() {
           <span>
             © {new Date().getFullYear()} Sistem Informasi Seminar Rohani Kristen • Soli Deo Gloria
           </span>
-          <span className="text-[11px] text-slate-400">
-            Dikelola oleh Koordinator Rohani untuk pemantauan pertumbuhan peserta
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-slate-400">
+              Dikelola oleh Koordinator Rohani untuk pemantauan pertumbuhan peserta
+            </span>
+            {isParticipantScan && (
+              <button
+                onClick={() => {
+                  setAppMode('admin');
+                  setIsParticipantScan(false);
+                }}
+                className="text-[11px] text-slate-400 hover:text-slate-600 underline cursor-pointer"
+                title="Buka panel admin jika Anda adalah koordinator"
+              >
+                Panel Koordinator
+              </button>
+            )}
+          </div>
         </div>
       </footer>
 

@@ -9,6 +9,7 @@ interface ParticipantFormProps {
   onSuccessSubmit?: (sessionId: number) => void;
   onBackToDashboard?: () => void;
   isAdminViewing?: boolean;
+  lockToActiveSession?: boolean;
 }
 
 const COMMON_CAMPUSES = [
@@ -33,7 +34,8 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
   initialSessionId = 1,
   onSuccessSubmit,
   onBackToDashboard,
-  isAdminViewing = false
+  isAdminViewing = false,
+  lockToActiveSession = true
 }) => {
   const [selectedSessionId, setSelectedSessionId] = useState<number>(initialSessionId);
   const [nama, setNama] = useState<string>('');
@@ -154,7 +156,15 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            {nextSession ? (
+            {lockToActiveSession ? (
+              <button
+                onClick={() => setSubmittedSuccess(false)}
+                className="flex-1 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Kirim Pembaruan / Jawaban Tambahan Sesi {currentSession?.id}</span>
+              </button>
+            ) : nextSession ? (
               <button
                 onClick={() => {
                   setSelectedSessionId(nextSession.id);
@@ -175,10 +185,10 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
               </button>
             )}
 
-            {onBackToDashboard && (
+            {onBackToDashboard && isAdminViewing && (
               <button
                 onClick={onBackToDashboard}
-                className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition"
+                className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition cursor-pointer"
               >
                 Kembali ke Dashboard
               </button>
@@ -193,18 +203,18 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* Top Banner & Session Indicator */}
       <div className="mb-6 flex items-center justify-between">
-        {onBackToDashboard && (
+        {onBackToDashboard && isAdminViewing && (
           <button
             onClick={onBackToDashboard}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition py-1 px-2.5 rounded-lg bg-white border border-slate-200 shadow-sm"
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition py-1 px-2.5 rounded-lg bg-white border border-slate-200 shadow-sm cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            {isAdminViewing ? 'Kembali ke Panel Koordinator' : 'Beranda Seminar'}
+            Kembali ke Panel Koordinator
           </button>
         )}
 
-        <div className="ml-auto text-xs text-slate-500 font-medium bg-amber-50 text-amber-800 px-3 py-1 rounded-full border border-amber-200">
-          Form Peserta • 7 Sesi Pembelajaran
+        <div className="ml-auto text-xs text-slate-500 font-medium bg-amber-50 text-amber-800 px-3 py-1 rounded-full border border-amber-200 font-semibold">
+          {lockToActiveSession ? `Penilaian ${currentSession?.title.split(':')[0] || `Sesi ${currentSession?.id}`} • Sesi Aktif` : `Form Peserta • ${sessions.length} Sesi Pembelajaran`}
         </div>
       </div>
 
@@ -216,10 +226,10 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
             Seminar Rohani Mahasiswa Kristen
           </div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-            Form Hasil Belajar & Pertumbuhan Rohani
+            Form Evaluasi {currentSession?.title.split(':')[0] || `Sesi ${currentSession?.id}`}
           </h1>
           <p className="text-xs text-amber-100/90 mt-1 max-w-xl">
-            Tuliskan apa yang Tuhan taruh di hati Saudara melalui sesi ini. Jawaban ini menjadi bekal doa dan perhatian bagi koordinator rohani.
+            Tuliskan apa yang Tuhan taruh di hati Saudara melalui sesi ini. Jawaban Anda dinilai langsung oleh tim koordinator seminar per sesi.
           </p>
         </div>
 
@@ -231,53 +241,116 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
             </div>
           )}
 
-          {/* 1. Sesi Selector */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-              Pilih Sesi Seminar ({sessions.length} Sesi Terdaftar):
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {sessions.map((sesi) => {
-                const isSelected = selectedSessionId === sesi.id;
-                return (
-                  <button
-                    key={sesi.id}
-                    type="button"
-                    onClick={() => setSelectedSessionId(sesi.id)}
-                    className={`flex-1 min-w-[100px] py-2 px-2.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
-                      isSelected
-                        ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-300 font-bold'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <div>Sesi {sesi.id}</div>
-                    <div className="text-[10px] opacity-80 truncate">
-                      {sesi.title.replace(`Sesi ${sesi.id}:`, '').trim()}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* Sesi Display: If locked, ONLY show active session details. Do NOT show selector for other sessions! */}
+          {lockToActiveSession ? (
+            /* Locked Single Active Session Spotlight */
+            <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/90 text-slate-800 shadow-2xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <span className="px-2.5 py-1 bg-amber-600 text-white text-[11px] font-bold rounded-lg uppercase tracking-wide">
+                  {currentSession?.title.split(':')[0] || `Sesi ${currentSession?.id}`} • Aktif
+                </span>
+                {currentSession?.scripture && (
+                  <span className="text-xs font-semibold text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-md border border-amber-200">
+                    Nats: {currentSession?.scripture}
+                  </span>
+                )}
+              </div>
 
-          {/* Sesi Detail Spotlight */}
-          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-slate-800">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold text-amber-800">
+              <h2 className="text-base font-bold text-slate-900 mb-1">
                 {currentSession?.title}
-              </span>
-              <span className="text-[11px] font-semibold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md">
-                Nats: {currentSession?.scripture}
-              </span>
+              </h2>
+
+              {currentSession?.speaker && (
+                <p className="text-xs text-slate-600 mb-1">
+                  Pembicara: <span className="font-semibold text-slate-800">{currentSession.speaker}</span>
+                </p>
+              )}
+
+              {currentSession?.theme && (
+                <div className="text-xs text-amber-800 font-medium mb-3">
+                  Tema: <span className="font-semibold italic">"{currentSession?.theme}"</span>
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-xl bg-white border border-amber-200/80 shadow-2xs">
+                <span className="font-bold text-amber-800 text-xs block mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  Pertanyaan Penilaian Sesi Ini:
+                </span>
+                <p className="italic text-slate-900 text-sm font-medium leading-relaxed">
+                  "{currentSession?.question}"
+                </p>
+              </div>
+
+              {/* Admin Preview Switcher (Only visible to admin previewing in dashboard, NOT to scanned participants) */}
+              {isAdminViewing && (
+                <div className="mt-3 pt-3 border-t border-amber-200/60 flex items-center justify-between text-xs text-slate-500">
+                  <span className="text-[11px] italic">Mode Pratinjau Koordinator (Ganti sesi yang ingin diuji):</span>
+                  <select
+                    value={selectedSessionId}
+                    onChange={(e) => setSelectedSessionId(Number(e.target.value))}
+                    className="px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700"
+                  >
+                    {sessions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        Sesi {s.id}: {s.title.split(':')[1]?.trim() || s.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
-            <div className="text-sm font-semibold text-slate-900 mb-2">
-              Tema: "{currentSession?.theme}"
-            </div>
-            <div className="text-xs font-medium text-slate-700 bg-white p-3 rounded-xl border border-amber-200/60 shadow-xs">
-              <span className="font-bold text-amber-800 block mb-1">Pertanyaan Evaluasi Sesi Ini:</span>
-              <p className="italic text-slate-800">"{currentSession?.question}"</p>
-            </div>
-          </div>
+          ) : (
+            /* Multi-session selector (Only used if lock is explicitly disabled) */
+            <>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  Pilih Sesi Seminar ({sessions.length} Sesi Terdaftar):
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {sessions.map((sesi) => {
+                    const isSelected = selectedSessionId === sesi.id;
+                    return (
+                      <button
+                        key={sesi.id}
+                        type="button"
+                        onClick={() => setSelectedSessionId(sesi.id)}
+                        className={`flex-1 min-w-[100px] py-2 px-2.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-300 font-bold'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div>Sesi {sesi.id}</div>
+                        <div className="text-[10px] opacity-80 truncate">
+                          {sesi.title.replace(`Sesi ${sesi.id}:`, '').trim()}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Sesi Detail Spotlight */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-slate-800">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-amber-800">
+                    {currentSession?.title}
+                  </span>
+                  <span className="text-[11px] font-semibold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                    Nats: {currentSession?.scripture}
+                  </span>
+                </div>
+                <div className="text-sm font-semibold text-slate-900 mb-2">
+                  Tema: "{currentSession?.theme}"
+                </div>
+                <div className="text-xs font-medium text-slate-700 bg-white p-3 rounded-xl border border-amber-200/60 shadow-xs">
+                  <span className="font-bold text-amber-800 block mb-1">Pertanyaan Evaluasi Sesi Ini:</span>
+                  <p className="italic text-slate-800">"{currentSession?.question}"</p>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* 2. Detail Peserta: Nama & Asal Kampus */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

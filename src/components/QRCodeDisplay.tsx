@@ -37,7 +37,6 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [includeSpecificSession, setIncludeSpecificSession] = useState<boolean>(true);
   const [showUrlSettings, setShowUrlSettings] = useState<boolean>(false);
 
   const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
@@ -81,9 +80,8 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   // Clean trailing slash
   const cleanBaseDomain = activeBaseDomain.replace(/\/+$/, '');
 
-  const targetUrl = includeSpecificSession
-    ? `${cleanBaseDomain}/?mode=form&session=${selectedSessionId}`
-    : `${cleanBaseDomain}/?mode=form`;
+  // Target URL is strictly locked to participant mode and the selected active session
+  const targetUrl = `${cleanBaseDomain}/?mode=form&session=${selectedSessionId}&locked=true`;
 
   useEffect(() => {
     setSelectedSessionId(activeSessionId);
@@ -333,15 +331,10 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           <label className={`text-xs font-semibold uppercase tracking-wider ${isFullscreen ? 'text-slate-400' : 'text-slate-500'}`}>
             Pilih Target Sesi ({sessions.length} Sesi Terdaftar):
           </label>
-          <label className="flex items-center gap-2 text-xs cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeSpecificSession}
-              onChange={(e) => setIncludeSpecificSession(e.target.checked)}
-              className="rounded text-amber-600 focus:ring-amber-500"
-            />
-            <span className={isFullscreen ? 'text-slate-300' : 'text-slate-600'}>Kunci langsung ke sesi ini</span>
-          </label>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Terkunci ke Sesi {selectedSessionId} (Sesi Lain Disembunyikan)</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -417,6 +410,11 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
             </p>
             <div className={`p-2.5 rounded-lg text-xs italic ${isFullscreen ? 'bg-slate-950 text-slate-300 border border-slate-800' : 'bg-white text-slate-700 border border-amber-100'}`}>
               "{currentSession?.question}"
+            </div>
+
+            <div className="mt-3 pt-2.5 border-t border-amber-200/60 flex items-center gap-1.5 text-[11px] text-amber-800 font-medium">
+              <span className="w-2 h-2 rounded-full bg-amber-600 inline-block shrink-0" />
+              <span>Khusus Penilaian Sesi {selectedSessionId}: Sesi lainnya otomatis disembunyikan bagi peserta.</span>
             </div>
           </div>
 
