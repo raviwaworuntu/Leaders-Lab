@@ -1,0 +1,90 @@
+{
+  "sessions": [
+    {
+      "id": 1,
+      "title": "Sesi 1: Fondasi Iman & Kasih Karunia",
+      "theme": "Memahami Keselamatan Sejati di Dalam Kristus",
+      "scripture": "Efesus 2:8-10",
+      "speaker": "Pdt. Dr. Yohanes Surya, M.Th.",
+      "question": "Apa pemahaman baru yang Anda peroleh mengenai kasih karunia Allah hari ini, dan bagaimana hal tersebut mengubah cara Anda memandang hidup Anda di hadapan Tuhan?",
+      "description": "Membangun dasar iman kristiani yang kokoh berakar pada karya penebusan Kristus, bukan usaha manusia.",
+      "isActive": true,
+      "order": 1
+    },
+    {
+      "id": 2,
+      "title": "Sesi 2: Menghidupi Firman di Tengah Kampus",
+      "theme": "Otoritas & Kedalaman Firman Allah dalam Studi",
+      "scripture": "Mazmur 119:9-11",
+      "speaker": "Ev. Daniel Prasetya, M.Div.",
+      "question": "Tantangan terbesar apa yang Anda hadapi saat berusaha taat pada kebenaran Firman Tuhan di lingkungan kampus, dan apa langkah konkret yang ingin Anda ambil?",
+      "description": "Menjadikan Alkitab sebagai pelita langkah dan standar moral di tengah tantangan intelektual dan pergaulan masa kini.",
+      "isActive": true,
+      "order": 2
+    },
+    {
+      "id": 3,
+      "title": "Sesi 3: Doa & Keintiman Pribadi dengan Allah",
+      "theme": "Membangun Hubungan Riil Bukan Sekadar Rutinitas",
+      "scripture": "Yohanes 15:5-7",
+      "speaker": "Pdt. Maria Kristanti, S.Th.",
+      "question": "Bagaimana kondisi kehidupan doa pribadi Anda saat ini? Apa tekad atau komitmen doa yang akan Anda bangun mulai minggu ini?",
+      "description": "Membimbing mahasiswa memiliki mezbah doa pribadi yang hidup, mendengarkan Tuhan dan tinggal di dalam pokok anggur yang benar.",
+      "isActive": true,
+      "order": 3
+    },
+    {
+      "id": 4,
+      "title": "Sesi 4: Karakter & Integritas Mahasiswa Kristen",
+      "theme": "Garam dan Terang di Dunia Akademik",
+      "scripture": "Matius 5:13-16; Daniel 1:8",
+      "speaker": "Dr. Andreas Tanujaya, Ph.D.",
+      "question": "Sebutkan 1 area konkret dalam kejujuran akademik atau relasi sosial di kampus di mana Anda bertekad untuk menunjukkan integritas Kristus.",
+      "description": "Menolak kompromi dalam kejujuran ujian, tugas kuliah, dan karakter hidup sehari-hari yang memuliakan Allah.",
+      "isActive": true,
+      "order": 4
+    },
+    {
+      "id": 5,
+      "title": "Sesi 5: Mengatasi Keraguan & Ujian Iman",
+      "theme": "Berakar Kuat di Tengah Badai dan Krisis Hidup",
+      "scripture": "1 Petrus 1:6-7; Ibrani 11:1",
+      "speaker": "Ev. Samuel Wibowo, M.Th.",
+      "question": "Pernahkah Anda mengalami keraguan atau pergumulan iman yang berat? Apa yang Anda pelajari dari sesi ini untuk tetap berpegang teguh pada janji Tuhan?",
+      "description": "Menjawab pertanyaan-pertanyaan sulit seputar penderitaan, keraguan iman, dan kepastian perlindungan Allah.",
+      "isActive": true,
+      "order": 5
+    },
+    {
+      "id": 6,
+      "title": "Sesi 6: Panggilan Hidup & Visi Masa Depan",
+      "theme": "Menemukan Rencana Allah bagi Profesi dan Studi",
+      "scripture": "Yeremia 29:11; Kolose 3:23-24",
+      "speaker": "Ir. Hendra Gunawan, M.M.",
+      "question": "Bagaimana Anda melihat bidang studi/keahlian Anda saat ini sebagai sarana melayani Tuhan dan menjadi berkat bagi sesama?",
+      "description": "Menghubungkan studi perkuliahan dengan mandat panggilan Allah dalam dunia profesional dan pelayanan.",
+      "isActive": true,
+      "order": 6
+    },
+    {
+      "id": 7,
+      "title": "Sesi 7: Misi & Murid Kristus yang Mengutus",
+      "theme": "Amanat Agung: Menjangkau Kampus bagi Kerajaan Allah",
+      "scripture": "Matius 28:19-20; Kisah Para Rasul 1:8",
+      "speaker": "Pdt. Jonathan Lie, D.Min.",
+      "question": "Siapa nama rekan atau lingkungan di kampus yang terbeban di hati Anda untuk Anda doakan dan bagikan kasih Kristus setelah seminar ini?",
+      "description": "Menjadikan setiap peserta sebagai murid yang memuridkan dan duta pembawa kabar baik di kampus masing-masing.",
+      "isActive": true,
+      "order": 7
+    }
+  ],
+  "submissions": {
+    "session_1": [],
+    "session_2": [],
+    "session_3": [],
+    "session_4": [],
+    "session_5": [],
+    "session_6": [],
+    "session_7": []
+  }
+}

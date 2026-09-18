@@ -1,0 +1,6 @@
+{
+  "name": "Portal Evaluasi & Pertumbuhan Rohani Seminar",
+  "description": "Aplikasi pengumpulan jawaban hasil belajar peserta seminar rohani Kristen 7 sesi dengan scan QR Code, dashboard real-time pemantauan per sesi, dan ekspor data Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
