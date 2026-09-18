@@ -11,7 +11,8 @@ import {
   BookOpen, 
   Activity, 
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  PlusCircle
 } from 'lucide-react';
 import { SeminarSession, SeminarStats, Submission } from '../types';
 
@@ -20,6 +21,7 @@ interface RealtimeDashboardProps {
   stats: SeminarStats | null;
   onSelectSessionTab: (sessionId: number) => void;
   onOpenQRModal: (sessionId?: number) => void;
+  onOpenCreateSessionModal?: () => void;
   onViewSubmissionDetail: (submission: Submission) => void;
   lastUpdated: Date;
   onRefresh: () => void;
@@ -31,6 +33,7 @@ export const RealtimeDashboard: React.FC<RealtimeDashboardProps> = ({
   stats,
   onSelectSessionTab,
   onOpenQRModal,
+  onOpenCreateSessionModal,
   onViewSubmissionDetail,
   lastUpdated,
   onRefresh,
@@ -39,7 +42,7 @@ export const RealtimeDashboard: React.FC<RealtimeDashboardProps> = ({
   const totalSubmissions = stats?.totalSubmissions || 0;
   const totalParticipants = stats?.totalUniqueParticipants || 0;
   const totalCampuses = stats?.totalCampuses || 0;
-  const avgPerSession = (totalSubmissions / 7).toFixed(1);
+  const avgPerSession = (totalSubmissions / (sessions.length || 1)).toFixed(1);
 
   // Calculate highest session count for relative progress bars
   const maxSessionCount = Math.max(
@@ -174,24 +177,35 @@ export const RealtimeDashboard: React.FC<RealtimeDashboardProps> = ({
         </div>
       </div>
 
-      {/* 7 Sesi Progress Monitor (Table-by-Table Overview) */}
+      {/* Sesi Progress Monitor (Table-by-Table Overview) */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5 pb-3 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-100">
           <div>
             <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-amber-600" />
-              Progres Jawaban 7 Sesi Secara Terpisah
+              Progres Jawaban Sesi Seminar ({sessions.length} Sesi Terpisah)
             </h3>
             <p className="text-xs text-slate-500">
               Setiap sesi memiliki tabel penyimpanan terpisah untuk pemantauan rohani yang detail
             </p>
           </div>
-          <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full w-fit">
-            Klik sesi untuk buka tabel data
-          </span>
+          <div className="flex items-center gap-2">
+            {onOpenCreateSessionModal && (
+              <button
+                onClick={onOpenCreateSessionModal}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>+ Input Sesi Baru</span>
+              </button>
+            )}
+            <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full w-fit">
+              Klik sesi untuk buka tabel data
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           {sessions.map((sesi) => {
             const count = stats?.sessionCounts[sesi.id] || 0;
             const percentOfMax = Math.round((count / maxSessionCount) * 100);

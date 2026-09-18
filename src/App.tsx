@@ -18,7 +18,8 @@ import {
   Check, 
   HeartHandshake,
   FileSpreadsheet,
-  Trash2
+  Trash2,
+  PlusCircle
 } from 'lucide-react';
 import { SeminarSession, Submission, SeminarStats } from './types';
 import { 
@@ -29,7 +30,9 @@ import {
   clearSessionSubmissions, 
   clearAllSubmissions, 
   updateSubmission, 
-  updateSession 
+  updateSession,
+  createSession,
+  deleteSession
 } from './api';
 import { RealtimeDashboard } from './components/RealtimeDashboard';
 import { SessionDataTable } from './components/SessionDataTable';
@@ -57,6 +60,7 @@ export default function App() {
   const [qrModalSessionId, setQrModalSessionId] = useState<number>(1);
   const [detailSubmission, setDetailSubmission] = useState<Submission | null>(null);
   const [editingSession, setEditingSession] = useState<SeminarSession | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
 
   // Check URL query parameters for direct scan flow: e.g. /?mode=form&session=3
   useEffect(() => {
@@ -69,7 +73,7 @@ export default function App() {
     }
     if (sessionParam) {
       const parsedSId = parseInt(sessionParam, 10);
-      if (parsedSId >= 1 && parsedSId <= 7) {
+      if (!isNaN(parsedSId) && parsedSId >= 1) {
         setActiveSessionId(parsedSId);
         setQrModalSessionId(parsedSId);
       }
@@ -231,7 +235,38 @@ export default function App() {
     if (!editingSession) return;
     const updated = await updateSession(editingSession.id, updatedSession);
     if (updated) {
-      fetchSessions();
+      await fetchSessions();
+    }
+  };
+
+  // Create new session
+  const handleCreateSession = async (newSessionData: Partial<SeminarSession>) => {
+    const res = await createSession(newSessionData);
+    if (res.success && res.data) {
+      await fetchSessions();
+      await fetchStats();
+      setActiveSessionId(res.data.id);
+      await fetchSubmissionsForSession(res.data.id);
+      setIsCreatingSession(false);
+    } else {
+      throw new Error(res.error || 'Gagal menambahkan sesi baru.');
+    }
+  };
+
+  // Delete session
+  const handleDeleteSession = async (sessionId: number) => {
+    const ok = await deleteSession(sessionId);
+    if (ok) {
+      await fetchSessions();
+      await fetchStats();
+      const remaining = sessions.filter((s) => s.id !== sessionId);
+      if (remaining.length > 0) {
+        setActiveSessionId(remaining[0].id);
+        fetchSubmissionsForSession(remaining[0].id);
+      }
+      setEditingSession(null);
+    } else {
+      throw new Error('Gagal menghapus sesi.');
     }
   };
 
@@ -252,7 +287,7 @@ export default function App() {
                     Portal Evaluasi Seminar Rohani
                   </h1>
                   <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                    7 Sesi Belajar
+                    {sessions.length} Sesi Belajar
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -302,13 +337,22 @@ export default function App() {
               </button>
             </div>
 
-            {/* Master Excel Export & Reset Controls */}
+            {/* Master Excel Export, Input Sesi & Reset Controls */}
             {appMode === 'admin' && (
               <div className="hidden sm:flex items-center gap-2">
                 <button
+                  onClick={() => setIsCreatingSession(true)}
+                  title="Tambah / input sesi seminar rohani baru ke dalam sistem"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>+ Input Sesi Baru</span>
+                </button>
+
+                <button
                   onClick={handleExportMasterExcel}
                   disabled={isExporting}
-                  title="Unduh seluruh rekapitulasi data jawaban 7 sesi ke format Excel (.xlsx)"
+                  title="Unduh seluruh rekapitulasi data jawaban seminar ke format Excel (.xlsx)"
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-60"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
@@ -318,7 +362,7 @@ export default function App() {
                 {(stats?.totalSubmissions || 0) > 0 && (
                   <button
                     onClick={() => {
-                      if (window.confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA evaluasi di ke-7 sesi seminar? Seluruh jawaban peserta akan dikosongkan. Tindakan ini tidak dapat dibatalkan.')) {
+                      if (window.confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA evaluasi di ${sessions.length} sesi seminar? Seluruh jawaban peserta akan dikosongkan. Tindakan ini tidak dapat dibatalkan.`)) {
                         handleClearAllSubmissions();
                       }
                     }}
@@ -420,6 +464,7 @@ export default function App() {
                   setAdminTab('tables');
                 }}
                 onOpenQRModal={handleOpenQRModal}
+                onOpenCreateSessionModal={() => setIsCreatingSession(true)}
                 onViewSubmissionDetail={(sub) => setDetailSubmission(sub)}
                 lastUpdated={lastUpdated}
                 onRefresh={() => {
@@ -442,6 +487,7 @@ export default function App() {
                 onViewSubmissionDetail={(sub) => setDetailSubmission(sub)}
                 onOpenQRModal={handleOpenQRModal}
                 onOpenEditSessionModal={(s) => setEditingSession(s)}
+                onOpenCreateSessionModal={() => setIsCreatingSession(true)}
                 onExportSessionExcel={handleExportSessionExcel}
                 isLoading={isLoading}
               />
@@ -496,12 +542,23 @@ export default function App() {
         />
       )}
 
+      {/* Session Create Modal */}
+      {isCreatingSession && (
+        <SessionManagerModal
+          isCreateMode={true}
+          suggestedNextId={sessions.length > 0 ? Math.max(...sessions.map((s) => s.id)) + 1 : 1}
+          onClose={() => setIsCreatingSession(false)}
+          onSave={handleCreateSession}
+        />
+      )}
+
       {/* Session Manager / Edit Modal */}
       {editingSession && (
         <SessionManagerModal
           session={editingSession}
           onClose={() => setEditingSession(null)}
           onSave={handleSaveSession}
+          onDelete={handleDeleteSession}
         />
       )}
     </div>

@@ -153,7 +153,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           </label>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+        <div className="flex flex-wrap gap-2">
           {sessions.map((sesi) => {
             const isSelected = selectedSessionId === sesi.id;
             return (
@@ -163,7 +163,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
                   setSelectedSessionId(sesi.id);
                   if (onSelectSession) onSelectSession(sesi.id);
                 }}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition flex flex-col items-center text-center ${
+                className={`flex-1 min-w-[100px] px-3 py-2 rounded-xl text-xs font-semibold transition flex flex-col items-center text-center cursor-pointer ${
                   isSelected
                     ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20 ring-2 ring-amber-400'
                     : isFullscreen

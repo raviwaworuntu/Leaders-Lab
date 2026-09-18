@@ -194,7 +194,7 @@ async function startServer() {
     res.json({ status: 'ok', time: new Date().toISOString() });
   });
 
-  // 2. Get all 7 sessions with submission counts
+  // 2. Get all sessions with submission counts
   app.get('/api/sessions', (req, res) => {
     try {
       const sessionsWithCount = store.sessions.map((session) => {
@@ -211,6 +211,100 @@ async function startServer() {
     } catch (err: any) {
       console.error('Error in /api/sessions:', err);
       res.status(500).json({ success: false, error: 'Gagal memuat sesi seminar' });
+    }
+  });
+
+  // 2b. Add / Input a new seminar session
+  app.post('/api/sessions', (req, res) => {
+    try {
+      const { title, theme, scripture, speaker, question, description, isActive, id } = req.body;
+
+      if (!title || !title.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Judul sesi wajib diisi.'
+        });
+      }
+
+      if (!question || !question.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Pertanyaan evaluasi / refleksi hasil belajar peserta wajib diisi.'
+        });
+      }
+
+      // Determine ID (either user-specified or next available)
+      let newId: number;
+      if (id !== undefined && id !== '' && !isNaN(parseInt(id, 10))) {
+        newId = parseInt(id, 10);
+      } else {
+        const existingIds = store.sessions.map((s) => s.id);
+        newId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+      }
+
+      // Check for duplicate ID
+      if (store.sessions.some((s) => s.id === newId)) {
+        return res.status(400).json({
+          success: false,
+          error: `Sesi dengan nomor ID ${newId} sudah terdaftar. Silakan gunakan nomor lain.`
+        });
+      }
+
+      const newSession: SeminarSession = {
+        id: newId,
+        title: String(title).trim(),
+        theme: theme && String(theme).trim() ? String(theme).trim() : `Sesi ${newId}`,
+        scripture: scripture && String(scripture).trim() ? String(scripture).trim() : 'Alkitab',
+        speaker: speaker && String(speaker).trim() ? String(speaker).trim() : undefined,
+        question: String(question).trim(),
+        description: description ? String(description).trim() : '',
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
+        order: newId
+      };
+
+      store.sessions.push(newSession);
+      store.sessions.sort((a, b) => a.id - b.id);
+
+      // Initialize dedicated storage table for this new session
+      if (!store.submissions[`session_${newId}`]) {
+        store.submissions[`session_${newId}`] = [];
+      }
+
+      saveStore();
+
+      res.status(201).json({
+        success: true,
+        message: `Sesi ${newId} berhasil ditambahkan!`,
+        data: newSession
+      });
+    } catch (err: any) {
+      console.error('Error in POST /api/sessions:', err);
+      res.status(500).json({ success: false, error: 'Gagal menambahkan sesi baru' });
+    }
+  });
+
+  // 2c. Delete a session
+  app.delete('/api/sessions/:id', (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id, 10);
+      const index = store.sessions.findIndex((s) => s.id === sessionId);
+
+      if (index === -1) {
+        return res.status(404).json({ success: false, error: 'Sesi tidak ditemukan' });
+      }
+
+      const deletedSession = store.sessions.splice(index, 1)[0];
+      delete store.submissions[`session_${sessionId}`];
+      saveStore();
+
+      res.json({
+        success: true,
+        message: `Sesi ${deletedSession.title} berhasil dihapus.`,
+        data: deletedSession
+      });
+    } catch (err: any) {
+      console.error('Error in DELETE /api/sessions/:id:', err);
+      res.status(500).json({ success: false, error: 'Gagal menghapus sesi' });
     }
   });
 
@@ -258,11 +352,11 @@ async function startServer() {
         const sId = parseInt(sessionIdParam, 10);
         allResults = (store.submissions && store.submissions[`session_${sId}`]) || [];
       } else {
-        // Gather all submissions across all 7 session tables
-        for (let i = 1; i <= 7; i++) {
-          const list = (store.submissions && store.submissions[`session_${i}`]) || [];
+        // Gather all submissions across all registered session tables
+        store.sessions.forEach((s) => {
+          const list = (store.submissions && store.submissions[`session_${s.id}`]) || [];
           allResults = allResults.concat(list);
-        }
+        });
       }
 
       if (search) {
@@ -308,15 +402,15 @@ async function startServer() {
       }
 
       const sId = parseInt(sessionId, 10);
-      if (isNaN(sId) || sId < 1 || sId > 7) {
+      const targetSession = store.sessions.find((s) => s.id === sId);
+      if (!targetSession) {
         return res.status(400).json({
           success: false,
-          error: 'ID Sesi tidak valid (pilihan 1 sampai 7).'
+          error: `Sesi ${sId} tidak ditemukan dalam daftar seminar.`
         });
       }
 
-      const targetSession = store.sessions.find((s) => s.id === sId);
-      if (targetSession && !targetSession.isActive) {
+      if (!targetSession.isActive) {
         return res.status(400).json({
           success: false,
           error: `Maaf, ${targetSession.title} saat ini sedang ditutup untuk pengisian jawaban.`
@@ -361,8 +455,8 @@ async function startServer() {
       let found = false;
       let updatedSub: Submission | null = null;
 
-      for (let i = 1; i <= 7; i++) {
-        const list = store.submissions[`session_${i}`] || [];
+      for (const session of store.sessions) {
+        const list = store.submissions[`session_${session.id}`] || [];
         const idx = list.findIndex((s) => s.id === id);
         if (idx !== -1) {
           list[idx] = {
@@ -397,7 +491,8 @@ async function startServer() {
       const sessionIdParam = req.query.sessionId as string;
       if (sessionIdParam) {
         const sId = parseInt(sessionIdParam, 10);
-        if (!isNaN(sId) && sId >= 1 && sId <= 7) {
+        const validSession = store.sessions.find((s) => s.id === sId);
+        if (validSession) {
           store.submissions[`session_${sId}`] = [];
           saveStore();
           return res.json({ success: true, message: `Semua data jawaban Sesi ${sId} berhasil dikosongkan.` });
@@ -406,12 +501,12 @@ async function startServer() {
         }
       }
 
-      // Clear all 7 sessions
-      for (let i = 1; i <= 7; i++) {
-        store.submissions[`session_${i}`] = [];
-      }
+      // Clear all sessions
+      store.sessions.forEach((session) => {
+        store.submissions[`session_${session.id}`] = [];
+      });
       saveStore();
-      res.json({ success: true, message: 'Semua data jawaban 7 sesi seminar berhasil dikosongkan.' });
+      res.json({ success: true, message: 'Semua data jawaban seluruh sesi seminar berhasil dikosongkan.' });
     } catch (err: any) {
       console.error('Error in DELETE /api/submissions:', err);
       res.status(500).json({ success: false, error: 'Gagal mengosongkan data jawaban' });
@@ -424,8 +519,8 @@ async function startServer() {
       const id = req.params.id;
       let deleted = false;
 
-      for (let i = 1; i <= 7; i++) {
-        const list = store.submissions[`session_${i}`] || [];
+      for (const session of store.sessions) {
+        const list = store.submissions[`session_${session.id}`] || [];
         const idx = list.findIndex((s) => s.id === id);
         if (idx !== -1) {
           list.splice(idx, 1);
@@ -455,9 +550,9 @@ async function startServer() {
       const sessionCounts: Record<number, number> = {};
       let allSubs: Submission[] = [];
 
-      for (let i = 1; i <= 7; i++) {
-        const list = (store.submissions && store.submissions[`session_${i}`]) || [];
-        sessionCounts[i] = list.length;
+      for (const session of store.sessions) {
+        const list = (store.submissions && store.submissions[`session_${session.id}`]) || [];
+        sessionCounts[session.id] = list.length;
         totalSubmissions += list.length;
         allSubs = allSubs.concat(list);
 
@@ -628,10 +723,9 @@ async function startServer() {
         summarySheet['!cols'] = [{ wch: 50 }, { wch: 30 }];
         XLSX.utils.book_append_sheet(workbook, summarySheet, 'Ringkasan Eksekutif');
 
-        // 2. Individual Dedicated Sheet for Each of the 7 Sessions
-        for (let i = 1; i <= 7; i++) {
-          const session = store.sessions.find((s) => s.id === i);
-          const list = store.submissions[`session_${i}`] || [];
+        // 2. Individual Dedicated Sheet for Each Session
+        store.sessions.forEach((session) => {
+          const list = store.submissions[`session_${session.id}`] || [];
 
           const sheetData = list.map((sub, idx) => ({
             'No': idx + 1,
@@ -656,11 +750,11 @@ async function startServer() {
             { wch: 35 }
           ];
 
-          const tabName = `Sesi ${i}`;
+          const tabName = `Sesi ${session.id}`;
           XLSX.utils.book_append_sheet(workbook, sheet, tabName);
-        }
+        });
 
-        const filename = `Rekapitulasi_Seminar_Rohani_7_Sesi.xlsx`;
+        const filename = `Rekapitulasi_Seminar_Rohani_${store.sessions.length}_Sesi.xlsx`;
         const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
 
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

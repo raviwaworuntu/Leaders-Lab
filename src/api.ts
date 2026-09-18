@@ -115,12 +115,27 @@ export async function clearAllSubmissions(): Promise<boolean> {
   return Boolean(res.success);
 }
 
+export async function createSession(
+  payload: Partial<SeminarSession>
+): Promise<ApiResponse<SeminarSession>> {
+  return safeFetchJson<SeminarSession>('/api/sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function deleteSession(id: number): Promise<boolean> {
+  const res = await safeFetchJson<void>(`/api/sessions/${id}`, { method: 'DELETE' });
+  return Boolean(res.success);
+}
+
 export async function updateSubmission(
   id: string,
   payload: Partial<Submission>
 ): Promise<Submission | null> {
   const res = await safeFetchJson<Submission>(`/api/submissions/${id}`, {
-    method: 'PATCH',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });

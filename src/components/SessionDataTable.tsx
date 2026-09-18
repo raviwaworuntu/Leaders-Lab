@@ -13,7 +13,8 @@ import {
   UserCheck, 
   AlertCircle,
   Clock,
-  Sparkles
+  Sparkles,
+  PlusCircle
 } from 'lucide-react';
 import { SeminarSession, Submission } from '../types';
 
@@ -28,6 +29,7 @@ interface SessionDataTableProps {
   onViewSubmissionDetail: (submission: Submission) => void;
   onOpenQRModal: (sessionId: number) => void;
   onOpenEditSessionModal: (session: SeminarSession) => void;
+  onOpenCreateSessionModal?: () => void;
   onExportSessionExcel: (sessionId: number) => void;
   isLoading: boolean;
 }
@@ -43,6 +45,7 @@ export const SessionDataTable: React.FC<SessionDataTableProps> = ({
   onViewSubmissionDetail,
   onOpenQRModal,
   onOpenEditSessionModal,
+  onOpenCreateSessionModal,
   onExportSessionExcel,
   isLoading
 }) => {
@@ -100,25 +103,37 @@ export const SessionDataTable: React.FC<SessionDataTableProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 7 Session Tabs Navigation */}
-      <div className="bg-white rounded-2xl p-2 border border-slate-200 shadow-xs">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 mb-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Tabel Penyimpanan Data Terpisah (7 Sesi):
-          </span>
-          <span className="text-xs text-amber-700 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-            Tabel Sesi {activeSessionId} Terpilih
-          </span>
+      {/* Session Tabs Navigation */}
+      <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 py-1.5 border-b border-slate-100 mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+              Tabel Penyimpanan Data Terpisah ({sessions.length} Sesi):
+            </span>
+            <span className="text-xs text-amber-700 font-semibold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+              Tabel Sesi {activeSessionId} Terpilih
+            </span>
+          </div>
+
+          {onOpenCreateSessionModal && (
+            <button
+              onClick={onOpenCreateSessionModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>+ Input Sesi Baru</span>
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {sessions.map((sesi) => {
             const isSelected = activeSessionId === sesi.id;
             return (
               <button
                 key={sesi.id}
                 onClick={() => onSelectSession(sesi.id)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center text-center cursor-pointer ${
+                className={`flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center text-center cursor-pointer ${
                   isSelected
                     ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20 ring-2 ring-amber-400'
                     : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
@@ -133,6 +148,20 @@ export const SessionDataTable: React.FC<SessionDataTableProps> = ({
               </button>
             );
           })}
+
+          {onOpenCreateSessionModal && (
+            <button
+              onClick={onOpenCreateSessionModal}
+              className="min-w-[110px] px-3 py-2 rounded-xl text-xs font-bold border border-dashed border-amber-300 text-amber-800 bg-amber-50/50 hover:bg-amber-100/80 flex flex-col items-center justify-center transition cursor-pointer"
+              title="Input sesi seminar baru"
+            >
+              <div className="flex items-center gap-1">
+                <PlusCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span>+ Sesi Baru</span>
+              </div>
+              <div className="text-[10px] font-normal text-amber-700/80">Input sesi</div>
+            </button>
+          )}
         </div>
       </div>
 

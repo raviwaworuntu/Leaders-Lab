@@ -47,10 +47,10 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
   const [showCampusSuggestions, setShowCampusSuggestions] = useState<boolean>(false);
 
   useEffect(() => {
-    if (initialSessionId && initialSessionId >= 1 && initialSessionId <= 7) {
+    if (initialSessionId && sessions.some((s) => s.id === initialSessionId)) {
       setSelectedSessionId(initialSessionId);
     }
-  }, [initialSessionId]);
+  }, [initialSessionId, sessions]);
 
   // Read saved name & campus from localStorage for participant's convenience across multiple sessions
   useEffect(() => {
@@ -61,6 +61,8 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
   }, []);
 
   const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
+  const currentIndex = sessions.findIndex((s) => s.id === selectedSessionId);
+  const nextSession = currentIndex >= 0 && currentIndex < sessions.length - 1 ? sessions[currentIndex + 1] : null;
 
   const filteredCampuses = COMMON_CAMPUSES.filter(
     (c) => asalKampus && c.toLowerCase().includes(asalKampus.toLowerCase()) && c !== asalKampus
@@ -152,17 +154,22 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            {selectedSessionId < 7 ? (
+            {nextSession ? (
               <button
-                onClick={handleResetForNextSession}
-                className="flex-1 px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm shadow-md transition flex items-center justify-center gap-2"
+                onClick={() => {
+                  setSelectedSessionId(nextSession.id);
+                  setSubmittedSuccess(false);
+                  setJawaban('');
+                  setKomitmenPribadi('');
+                }}
+                className="flex-1 px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Lanjut Isi Sesi {selectedSessionId + 1}</span>
+                <span>Lanjut Isi {nextSession.title.split(':')[0] || `Sesi ${nextSession.id}`}</span>
               </button>
             ) : (
               <button
                 onClick={() => setSubmittedSuccess(false)}
-                className="flex-1 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition"
+                className="flex-1 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition cursor-pointer"
               >
                 Isi Sesi Lainnya
               </button>
@@ -224,12 +231,12 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
             </div>
           )}
 
-          {/* 1. Sesi Selector (1 through 7) */}
+          {/* 1. Sesi Selector */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-              Pilih Sesi Seminar (Sesi 1 s/d 7):
+              Pilih Sesi Seminar ({sessions.length} Sesi Terdaftar):
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+            <div className="flex flex-wrap gap-2">
               {sessions.map((sesi) => {
                 const isSelected = selectedSessionId === sesi.id;
                 return (
@@ -237,9 +244,9 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
                     key={sesi.id}
                     type="button"
                     onClick={() => setSelectedSessionId(sesi.id)}
-                    className={`py-2 px-2 rounded-xl text-xs font-semibold transition border ${
+                    className={`flex-1 min-w-[100px] py-2 px-2.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
                       isSelected
-                        ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-300'
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-300 font-bold'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
