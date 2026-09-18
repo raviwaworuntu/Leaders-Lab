@@ -32,6 +32,7 @@ interface SessionDataTableProps {
   onOpenCreateSessionModal?: () => void;
   onExportSessionExcel: (sessionId: number) => void;
   isLoading: boolean;
+  stats?: any;
 }
 
 export const SessionDataTable: React.FC<SessionDataTableProps> = ({
@@ -47,7 +48,8 @@ export const SessionDataTable: React.FC<SessionDataTableProps> = ({
   onOpenEditSessionModal,
   onOpenCreateSessionModal,
   onExportSessionExcel,
-  isLoading
+  isLoading,
+  stats
 }) => {
   const [search, setSearch] = useState<string>('');
   const [campusFilter, setCampusFilter] = useState<string>('ALL');
@@ -129,6 +131,10 @@ export const SessionDataTable: React.FC<SessionDataTableProps> = ({
         <div className="flex flex-wrap gap-1.5">
           {sessions.map((sesi) => {
             const isSelected = activeSessionId === sesi.id;
+            const count = (stats?.sessionCounts && stats.sessionCounts[sesi.id] !== undefined)
+              ? stats.sessionCounts[sesi.id]
+              : (sesi.submissionCount || 0);
+
             return (
               <button
                 key={sesi.id}
@@ -139,8 +145,17 @@ export const SessionDataTable: React.FC<SessionDataTableProps> = ({
                     : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
                 }`}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <span>Sesi {sesi.id}</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    isSelected
+                      ? 'bg-amber-800 text-white'
+                      : count > 0
+                      ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {count}
+                  </span>
                 </div>
                 <div className={`text-[10px] font-normal truncate max-w-full ${isSelected ? 'text-amber-100' : 'text-slate-500'}`}>
                   {sesi.title.split(':')[1]?.trim() || `Sesi ${sesi.id}`}

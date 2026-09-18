@@ -136,23 +136,29 @@ export default function App() {
     };
   }, [fetchSessions, fetchStats, fetchSubmissionsForSession, activeSessionId]);
 
-  // Real-time polling every 6 seconds in admin mode
+  // Real-time polling every 3.5 seconds in admin mode
   useEffect(() => {
     if (appMode !== 'admin') return;
 
     let isPolling = true;
     const interval = setInterval(async () => {
       if (!isPolling) return;
-      await fetchStats();
-      if (!isPolling) return;
-      await fetchSubmissionsForSession(activeSessionId);
-    }, 6000);
+      try {
+        await Promise.all([
+          fetchSessions(),
+          fetchStats(),
+          fetchSubmissionsForSession(activeSessionId)
+        ]);
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 3500);
 
     return () => {
       isPolling = false;
       clearInterval(interval);
     };
-  }, [appMode, activeSessionId, fetchStats, fetchSubmissionsForSession]);
+  }, [appMode, activeSessionId, fetchSessions, fetchStats, fetchSubmissionsForSession]);
 
   // Switch session tab
   const handleSelectSession = (sId: number) => {
@@ -417,6 +423,7 @@ export default function App() {
             sessions={sessions}
             initialSessionId={activeSessionId}
             onSuccessSubmit={(sId) => {
+              fetchSessions();
               fetchStats();
               fetchSubmissionsForSession(sId);
             }}
@@ -524,6 +531,7 @@ export default function App() {
                 onOpenCreateSessionModal={() => setIsCreatingSession(true)}
                 onExportSessionExcel={handleExportSessionExcel}
                 isLoading={isLoading}
+                stats={stats}
               />
             )}
 

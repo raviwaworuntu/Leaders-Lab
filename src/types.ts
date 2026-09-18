@@ -8,6 +8,8 @@ export interface SeminarSession {
   description: string;
   isActive: boolean;
   order: number;
+  submissionCount?: number;
+  uniqueCampuses?: number;
 }
 
 export interface Submission {

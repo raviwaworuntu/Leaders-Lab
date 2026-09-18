@@ -62,6 +62,19 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
     if (savedCampus) setAsalKampus(savedCampus);
   }, []);
 
+  // Early loading fallback if sessions array is still being fetched from the server
+  if (!sessions || sessions.length === 0) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center">
+        <div className="inline-flex items-center justify-center p-4 bg-amber-50 rounded-2xl border border-amber-200 text-amber-800 mb-4 animate-pulse">
+          <BookOpen className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">Menyiapkan Form Evaluasi Seminar...</h3>
+        <p className="text-xs text-slate-500">Menghubungkan ke sesi aktif seminar rohani, mohon tunggu sebentar.</p>
+      </div>
+    );
+  }
+
   const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
   const currentIndex = sessions.findIndex((s) => s.id === selectedSessionId);
   const nextSession = currentIndex >= 0 && currentIndex < sessions.length - 1 ? sessions[currentIndex + 1] : null;
@@ -87,11 +100,13 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
       return;
     }
 
+    const targetSId = Number(selectedSessionId) || Number(initialSessionId) || (sessions[0]?.id ?? 1);
+
     setSubmitting(true);
 
     try {
       const result = await postSubmission({
-        sessionId: selectedSessionId,
+        sessionId: targetSId,
         nama: nama.trim(),
         asalKampus: asalKampus.trim(),
         jawaban: jawaban.trim(),
@@ -99,7 +114,7 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
       });
 
       if (!result.success || !result.data) {
-        throw new Error(result.error || 'Gagal mengirim jawaban.');
+        throw new Error(result.error || 'Gagal mengirim jawaban ke server.');
       }
 
       // Save name & campus to facilitate filling the remaining sessions
@@ -108,10 +123,11 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
 
       setSubmittedSuccess(true);
       if (onSuccessSubmit) {
-        onSuccessSubmit(selectedSessionId);
+        onSuccessSubmit(targetSId);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan jaringan.');
+      console.error('Participant submission error:', err);
+      setErrorMsg(err.message || 'Terjadi kesalahan jaringan atau server saat mengirim jawaban.');
     } finally {
       setSubmitting(false);
     }
@@ -158,11 +174,15 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
           <div className="flex flex-col sm:flex-row gap-3">
             {lockToActiveSession ? (
               <button
-                onClick={() => setSubmittedSuccess(false)}
+                onClick={() => {
+                  setJawaban('');
+                  setKomitmenPribadi('');
+                  setSubmittedSuccess(false);
+                }}
                 className="flex-1 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition cursor-pointer flex items-center justify-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>Kirim Pembaruan / Jawaban Tambahan Sesi {currentSession?.id}</span>
+                <span>Kirim Jawaban Tambahan / Baru Sesi {currentSession?.id}</span>
               </button>
             ) : nextSession ? (
               <button
@@ -178,7 +198,11 @@ export const ParticipantForm: React.FC<ParticipantFormProps> = ({
               </button>
             ) : (
               <button
-                onClick={() => setSubmittedSuccess(false)}
+                onClick={() => {
+                  setJawaban('');
+                  setKomitmenPribadi('');
+                  setSubmittedSuccess(false);
+                }}
                 className="flex-1 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition cursor-pointer"
               >
                 Isi Sesi Lainnya

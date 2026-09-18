@@ -17,7 +17,7 @@
       "theme": "Being salt and light is not an option, it's an identity",
       "scripture": "Matius 5:13-16",
       "speaker": "Maikhel Tomhisa",
-      "question": "Apa yang kamu pelajari dari materi ini?",
+      "question": "Apa yang kamu pelajari dari materi yang telah disampaikan? Jelaskan!",
       "description": "Being salt and light is not an option, it's an identity",
       "isActive": true,
       "order": 2
@@ -79,7 +79,27 @@
     }
   ],
   "submissions": {
-    "session_1": [],
+    "session_1": [
+      {
+        "id": "sub-1789720072811-bci40p",
+        "sessionId": 1,
+        "nama": "Jonathan Situmorang",
+        "asalKampus": "Institut Teknologi Bandung",
+        "jawaban": "Belajar bahwa karya keselamatan adalah murni anugerah Allah melalui iman.",
+        "komitmenPribadi": "Membaca renungan firman setiap pagi.",
+        "statusSpiritual": "Baru Bertumbuh",
+        "timestamp": "2026-09-18T08:27:52.811Z"
+      },
+      {
+        "id": "sub-1789719859161-xejtbq",
+        "sessionId": 1,
+        "nama": "Maria Natalia",
+        "asalKampus": "Universitas Indonesia",
+        "jawaban": "Memahami bahwa kita diselamatkan oleh anugerah melalui iman, bukan perbuatan baik kita.",
+        "statusSpiritual": "Baru Bertumbuh",
+        "timestamp": "2026-09-18T08:24:19.161Z"
+      }
+    ],
     "session_2": [],
     "session_3": [],
     "session_4": [],

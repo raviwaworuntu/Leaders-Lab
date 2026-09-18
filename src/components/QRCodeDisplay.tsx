@@ -59,26 +59,27 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
     ? rawOrigin.replace('ais-dev-', 'ais-pre-') 
     : rawOrigin;
 
-  // Base URL state: 'public' (ais-pre for general participants), 'dev' (current origin), or 'custom'
-  const [urlMode, setUrlMode] = useState<'public' | 'dev' | 'custom'>(() => {
+  // Base URL state: 'dev' (direct sync with active server), 'public' (ais-pre), or 'custom'
+  const [urlMode, setUrlMode] = useState<'dev' | 'public' | 'custom'>(() => {
     const saved = localStorage.getItem('seminar_qr_url_mode');
-    if (saved === 'public' || saved === 'dev' || saved === 'custom') return saved;
-    return isAisDev ? 'public' : 'dev';
+    // Ensure we default to 'dev' (active origin) so submissions go directly to this server instance
+    if (saved === 'dev' || saved === 'custom') return saved;
+    return 'dev';
   });
 
   const [customBaseUrl, setCustomBaseUrl] = useState<string>(() => {
-    return localStorage.getItem('seminar_qr_custom_base_url') || (isAisDev ? suggestedPublicOrigin : rawOrigin);
+    return localStorage.getItem('seminar_qr_custom_base_url') || rawOrigin;
   });
 
-  // Determine active base domain
-  const activeBaseDomain = urlMode === 'public'
-    ? suggestedPublicOrigin
-    : urlMode === 'dev'
+  // Determine active base domain (default is active rawOrigin to guarantee live database sync)
+  const activeBaseDomain = urlMode === 'dev'
     ? rawOrigin
+    : urlMode === 'public'
+    ? suggestedPublicOrigin
     : customBaseUrl.trim();
 
   // Clean trailing slash
-  const cleanBaseDomain = activeBaseDomain.replace(/\/+$/, '');
+  const cleanBaseDomain = (activeBaseDomain || rawOrigin).replace(/\/+$/, '');
 
   // Target URL is strictly locked to participant mode and the selected active session
   const targetUrl = `${cleanBaseDomain}/?mode=form&session=${selectedSessionId}&locked=true`;
@@ -253,28 +254,28 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => handleSelectUrlMode('public')}
+                onClick={() => handleSelectUrlMode('dev')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-                  urlMode === 'public'
+                  urlMode === 'dev'
                     ? 'bg-amber-600 text-white shadow-xs font-bold'
                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <Check className={`w-3.5 h-3.5 ${urlMode === 'public' ? 'opacity-100' : 'opacity-0'}`} />
-                <span>URL Publik (ais-pre)</span>
+                <Check className={`w-3.5 h-3.5 ${urlMode === 'dev' ? 'opacity-100' : 'opacity-0'}`} />
+                <span>Server Aktif Langsung (Rekomendasi)</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleSelectUrlMode('dev')}
+                onClick={() => handleSelectUrlMode('public')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-                  urlMode === 'dev'
+                  urlMode === 'public'
                     ? 'bg-slate-800 text-white shadow-xs font-bold'
                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <Check className={`w-3.5 h-3.5 ${urlMode === 'dev' ? 'opacity-100' : 'opacity-0'}`} />
-                <span>URL Dev (ais-dev)</span>
+                <Check className={`w-3.5 h-3.5 ${urlMode === 'public' ? 'opacity-100' : 'opacity-0'}`} />
+                <span>URL Preview (ais-pre)</span>
               </button>
 
               <button
@@ -285,12 +286,12 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
                 }}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
                   urlMode === 'custom'
-                    ? 'bg-amber-700 text-white shadow-xs font-bold'
+                    ? 'bg-slate-800 text-white shadow-xs font-bold'
                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
                 }`}
               >
                 <Check className={`w-3.5 h-3.5 ${urlMode === 'custom' ? 'opacity-100' : 'opacity-0'}`} />
-                <span>Kustom URL</span>
+                <span>Kustom URL / Tunnel</span>
               </button>
             </div>
           </div>
